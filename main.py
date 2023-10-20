@@ -22,10 +22,6 @@ class Assembly:
         self.how    = how
 
 def divisors(n):
-    """
-    Returns the first element x of the pairs in D, with 
-    D = {(x, y) ∈ {1, 2, ..., n}² | (xy = n) ^ (x < y)}. }.
-    """
     from math import sqrt, ceil
     result, limit = (), ceil(sqrt(n)) + 1
 
@@ -91,7 +87,7 @@ def can_place_shape(shape: Rect, x, y, conv):
     if horizontally and vertically: return BOTH
     if horizontally               : return HORIZONTALLY
     if vertically                 : return VERTICALLY
-    return CANT_PLACE
+    else                          : return CANT_PLACE
 
 def place_shape(conv, shape: Rect, how, x, y):
     for i in range(shape.w):
@@ -180,13 +176,12 @@ def assemble_shapes(shapes: list[Rect], memo):
     from itertools import combinations
 
     squares = get_squares(shapes)
-    for i in range(1, SQUARES_PER_ROW+1):
+    for i in range(1, SQUARES_PER_ROW+1, +1):
         if set({i}).issubset(memo): continue
 
         allcombinations = list(combinations(shapes, i))
         for combination in allcombinations:
             assembly = assemble(combination, squares)
-
             if assembly:
                 for shape in assembly.shapes: shapes.remove(shape)
                 return assembly
@@ -196,7 +191,7 @@ def assemble_shapes(shapes: list[Rect], memo):
 def inc_x(x, i): return (x + i) % SQUARES_PER_ROW
 
 def place_assembly_of_shapes(convbelt, shapes):
-    print(f"Placing {len(shapes)} items:")
+    print(f"Placing {len(shapes)} items:\n")
     memo, y = set(), 0
     while True:
         validsh = assemble_shapes(shapes, memo)
@@ -209,8 +204,13 @@ def place_assembly_of_shapes(convbelt, shapes):
             place_shape(convbelt, shape, how, x, y)
             x = inc_x(x, inc)
         y += validsh.height
-    print(f"Number of shapes left to place: {len(shapes)}")
+
+    print(f"\nNumber of shapes left to place: {len(shapes)}.")
+    for sh in shapes: print(f"{sh.l}: ({sh.w}, {sh.h})\n")
+
     return y
+
+sett = set()
 
 def place_rest(convbelt, shapes, y):
     x = 0
@@ -242,13 +242,21 @@ def solve(items, length=500):
     conveyor_belt = make_convbelt(length)
     y = place_assembly_of_shapes(conveyor_belt, shapes)
     conveyor_belt_len = place_rest(conveyor_belt, shapes, y)
+    print()
     print_convbelt(conveyor_belt)
     return conveyor_belt_len * SQUARE_LEN
 
+
 if __name__ == '__main__':
-    # shapes = [Rect(1, 1, "e"), Rect(2, 1, "d"), Rect(4, 4, "a"), Rect(2, 2, "b"), Rect(2, 2, "c")]
-    # shapes = [Rect(4, 1, "a"), Rect(3, 1, "b"), Rect(3, 2, "c"), Rect(3, 1, "d"), Rect(2, 2, "e"), Rect(2, 1, "f")]
-    # shapes = [Rect(4, 1, "a"), Rect(1, 2, "b"), Rect(1, 2, "c"), Rect(1, 2, "d"), Rect(1, 1, "e"), Rect(1, 1, "f"), Rect(3, 2, "g"), Rect(2, 2, "h"), Rect(1, 1, "i"), Rect(3, 1, "j"), Rect(4, 4, "j"), Rect(1, 1, "l")]
-    items = [Item(10, 55, 'z'), Item(10, 10, "a"), Item(10, 10, "d"), Item(55, 55, "b"), Item(10, 10, "c")]
-    result = solve(items)
-    print(f"Result: {result}cm.")
+    from random import random
+    randint = lambda ub, lb: random() * (ub - lb) + lb
+    alph = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
+
+    items = []
+    for i in range(125):
+        w = randint(0, 100)
+        h = randint(0, 100)
+        items.append(Item(w, h, alph[i%10]))
+
+    result = solve(items, length=7000)
+    print(f"\nResult: {result}cm.")
